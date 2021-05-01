@@ -1,0 +1,2 @@
+# gamelib.common
+Gamedek plugin

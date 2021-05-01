@@ -1,2 +1,2 @@
 # gamelib.common
-Gamedek plugin
+Gamedek plugin for common game list handling

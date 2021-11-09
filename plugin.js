@@ -48,16 +48,16 @@ class myplugin extends global.Plugin {
         }
         if (!props.info.title) {
             returns.error = {
-                title: await kernel.translateBlock('${lang.ge_com_info_required_title}'),
-                message: await kernel.translateBlock('${lang.ge_com_info_required "' + await kernel.translateBlock('${lang.ge_com_info_tabinfo_title}') + '"}'),
+                title: await kernel.translateBlock('${lang.ge_com_required_title}'),
+                message: await kernel.translateBlock('${lang.ge_com_required "' + await kernel.translateBlock('${lang.ge_com_tabinfo_title}') + '"}'),
             }
             returns.tab = 'info'
             returns.item = 'title'
         }
         if (!props.info.year) {
             returns.error = {
-                title: await kernel.translateBlock('${lang.ge_com_info_required_title}'),
-                message: await kernel.translateBlock('${lang.ge_com_info_required "' + await kernel.translateBlock('${lang.ge_com_info_tabinfo_year}') + '"}'),
+                title: await kernel.translateBlock('${lang.ge_com_required_title}'),
+                message: await kernel.translateBlock('${lang.ge_com_required "' + await kernel.translateBlock('${lang.ge_com_tabinfo_year}') + '"}'),
             }
             returns.tab = 'info'
             returns.item = 'year'
@@ -68,8 +68,8 @@ class myplugin extends global.Plugin {
 
         if (info.prev_hash && hash != info.prev_hash && exists) {
             returns.error = {
-                title: await kernel.translateBlock('${lang.ge_com_info_alreadyexists_title}'),
-                message: await kernel.translateBlock('${lang.ge_com_info_alreadyexists}'),
+                title: await kernel.translateBlock('${lang.ge_com_alreadyexists_title}'),
+                message: await kernel.translateBlock('${lang.ge_com_alreadyexists}'),
             }
             returns.tab = 'info'
             returns.item = 'title'
@@ -77,8 +77,8 @@ class myplugin extends global.Plugin {
             return returns
         } else if (info.prev_hash && hash == info.prev_hash && !exists) {
             returns.error = {
-                title: await kernel.translateBlock('${lang.ge_com_info_notexists_title}'),
-                message: await kernel.translateBlock('${lang.ge_com_info_notexists}'),
+                title: await kernel.translateBlock('${lang.ge_com_notexists_title}'),
+                message: await kernel.translateBlock('${lang.ge_com_notexists}'),
             }
             return returns
         }
@@ -157,8 +157,8 @@ class myplugin extends global.Plugin {
             }
             if (!fs.existsSync(props.info[toi])) {
                 returns.error = {
-                    title: await kernel.translateBlock('${lang.ge_com_info_filenotfound_title}'),
-                    message: await kernel.translateBlock('${lang.ge_com_info_filenotfound "' + await kernel.translateBlock('${lang.ge_com_info_tabinfo_' + toi + '}') + '" "' + props.info[toi] + '"}'),
+                    title: await kernel.translateBlock('${lang.ge_com_filenotfound_title}'),
+                    message: await kernel.translateBlock('${lang.ge_com_filenotfound "' + await kernel.translateBlock('${lang.ge_com_tabinfo_' + toi + '}') + '" "' + props.info[toi] + '"}'),
                 }
                 returns.tab = 'info'
                 returns.item = toi
@@ -178,19 +178,6 @@ class myplugin extends global.Plugin {
     }
     async convertGameInfo(gameinfo) {
         return
-        //in care we need to convert string jkson object into a valid datatype before passed to gui
-        // For example DATETIME or Media
-        const tointernalize = ['imagelandscape', 'imageportrait', 'icon']
-        const interalmediapath = path.join(this.#mediapath, gameinfo.hash)
-        const props = gameinfo.props
-        for (const toi of tointernalize) {
-            if (!props.info[toi]) {
-                continue
-            }
-            if (props.info[toi].indexOf('@media://') > -1) {
-                props.info[toi] = path.join(interalmediapath, props.info[toi].replace(/\@media:\/\//g, ''))
-            }
-        }
     }
     async queryInfoForGame(action, newargsinfo) {
         if (action.split('.')[0] != 'import') {
@@ -205,48 +192,60 @@ class myplugin extends global.Plugin {
 
         newargsinfo.tabs.info = {
             order: "0"
-            , title: await kernel.translateBlock('${lang.ge_com_info_tabinfo}')
+            , title: await kernel.translateBlock('${lang.ge_com_tabinfo_name}')
             , items: {
                 title: {
                     type: "text"
-                    , label: await kernel.translateBlock('${lang.ge_com_info_tabinfo_title}')
+                    , label: await kernel.translateBlock('${lang.ge_com_tabinfo_title}')
                     , required: true
                 },
                 imagelandscape: {
                     type: "image"
-                    , label: await kernel.translateBlock('${lang.ge_com_info_tabinfo_imagelandscape}')
-                    , note: await kernel.translateBlock('${lang.ge_com_info_tabinfo_imagelandscape_tip}')
+                    , label: await kernel.translateBlock('${lang.ge_com_tabinfo_imagelandscape}')
+                    , note: await kernel.translateBlock('${lang.ge_com_tabinfo_imagelandscape_tip}')
                     , filters: [
                         {
-                            name: await kernel.translateBlock('${lang.ge_com_info_image_flabel}')
+                            name: await kernel.translateBlock('${lang.ge_com_tabinfo_image_flabel}')
                             , extensions: ['jpg', 'png', 'gif']
                         }
                     ]
                 },
                 imageportrait: {
                     type: "image"
-                    , label: await kernel.translateBlock('${lang.ge_com_info_tabinfo_imageportrait}')
-                    , note: await kernel.translateBlock('${lang.ge_com_info_tabinfo_imageportrait_tip}')
+                    , label: await kernel.translateBlock('${lang.ge_com_tabinfo_imageportrait}')
+                    , note: await kernel.translateBlock('${lang.ge_com_tabinfo_imageportrait_tip}')
                     , filters: [
                         {
-                            name: await kernel.translateBlock('${lang.ge_com_info_image_flabel}')
+                            name: await kernel.translateBlock('${lang.ge_com_tabinfo_image_flabel}')
                             , extensions: ['jpg', 'png', 'gif']
                         }
                     ]
                 },
                 icon: {
                     type: "image"
-                    , label: await kernel.translateBlock('${lang.ge_com_info_tabinfo_icon}')
+                    , label: await kernel.translateBlock('${lang.ge_com_tabinfo_icon}')
                     , filters: [
                         {
-                            name: await kernel.translateBlock('${lang.ge_com_info_image_flabel}')
+                            name: await kernel.translateBlock('${lang.ge_com_tabinfo_image_flabel}')
                             , extensions: ['jpg', 'png', 'gif']
                         }
                     ]
                 },
                 year: {
                     type: "select"
-                    , label: await kernel.translateBlock('${lang.ge_com_info_tabinfo_year}')
+                    , label: await kernel.translateBlock('${lang.ge_com_tabinfo_year}')
+                },
+            }
+        }
+        newargsinfo.tabs.system = {
+            order: "1"
+            , title: await kernel.translateBlock('${lang.ge_com_tabsys_name}')
+            , items: {
+                env: {
+                    type: "keyvalue"
+                    , label: await kernel.translateBlock('${lang.ge_com_tabsys_envtitle}')
+                    , label_placeholder: await kernel.translateBlock('${lang.ge_com_tabsys_envlabel_ph}')
+                    , item_placeholder: await kernel.translateBlock('${lang.ge_com_tabsys_envitem_ph}')
                 },
             }
         }

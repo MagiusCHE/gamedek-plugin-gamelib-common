@@ -19,10 +19,13 @@ class myplugin extends global.Plugin {
 
         const dirs = fs.readdirSync(this.#mediapath)
 
+        let updated = false;
+
         library.games.forEach(g => {
             if (!g.hash) {
                 g.hash = this.generateGameHash(g)
                 this.log(`Game "%s" has no hash. Recreate it = %s`, g.props.info.title, g.hash)
+                updated = true;
             }
             const d = dirs.indexOf(g.hash)
             if (d > -1) {
@@ -124,54 +127,76 @@ class myplugin extends global.Plugin {
     }
     async createNewGame(info, returns) {
         returns = returns || {}
-        const props = info.props
-        const hash = this.generateGameHash(info)
+        try {
+            const props = info.props
+            const hash = this.generateGameHash(info)
 
-        const interalmediapath = path.join(this.#mediapath, hash)
-        //internalize images
-        const tointernalize = ['imagelandscape', 'imageportrait', 'icon']
+            const interalmediapath = path.join(this.#mediapath, hash)
+            //internalize images
+            const tointernalize = ['imagelandscape', 'imageportrait', 'icon']
 
-        if (info.prev_hash && hash != info.prev_hash) {
-            const oripath = path.join(this.#mediapath, info.prev_hash)
-            if (fs.existsSync(oripath)) {
-                fs.renameSync(oripath, interalmediapath)
-                for (const toi of tointernalize) {
-                    if (!props.info[toi]) {
-                        continue
-                    }
-                    if (props.info[toi].indexOf(path.join(oripath, '/')) == 0) {
-                        props.info[toi] = '@media://' + toi + path.extname(props.info[toi])
+            if (info.prev_hash && hash != info.prev_hash) {
+                const oripath = path.join(this.#mediapath, info.prev_hash)
+                if (fs.existsSync(oripath)) {
+                    fs.renameSync(oripath, interalmediapath)
+                    for (const toi of tointernalize) {
+                        if (!props.info[toi]) {
+                            continue
+                        }
+                        if (props.info[toi].indexOf(path.join(oripath, '/')) == 0) {
+                            props.info[toi] = '@media://' + toi + path.extname(props.info[toi])
+                        }
                     }
                 }
             }
-        }
 
-        info.hash = hash
+            //this.log(`Setting game hash %s`, hash, props.info)
+            info.hash = hash
 
-        for (const toi of tointernalize) {
-            if (!props.info[toi]) {
-                continue
-            }
-            if (props.info[toi].indexOf('@media://') == 0) {
-                continue
-            }
-            if (!fs.existsSync(props.info[toi])) {
-                returns.error = {
-                    title: await kernel.translateBlock('${lang.ge_com_filenotfound_title}'),
-                    message: await kernel.translateBlock('${lang.ge_com_filenotfound "' + await kernel.translateBlock('${lang.ge_com_tabinfo_' + toi + '}') + '" "' + props.info[toi] + '"}'),
+            for (const toi of tointernalize) {
+                if (!props.info[toi]) {
+                    continue
                 }
-                returns.tab = 'info'
-                returns.item = toi
 
-                return returns
+                this.log(`Internalizing image for "%s": %s`, toi, props.info[toi])
+
+                if (props.info[toi].indexOf('@media://') == 0) {
+                    continue
+                }
+
+                if (props.info[toi].indexOf('https://') == 0) {
+                    // Download image from web
+                    this.log(`Downloading image from web for "%s": %s`, toi, props.info[toi])
+                    try {
+                        const rs = await kernel.broadcastPluginMethod('curl', 'ensureFileByUrl', props.info[toi], 'images')
+                        props.info[toi] = rs.returns.last.fname
+                    } catch (e) {
+                        this.logError(`Error downloading image for "%s" from "%s": %s`, toi, props.info[toi], e.message)
+                    }
+                }
+
+                if (!fs.existsSync(props.info[toi])) {
+                    returns.error = {
+                        title: await kernel.translateBlock('${lang.ge_com_filenotfound_title}'),
+                        message: await kernel.translateBlock('${lang.ge_com_filenotfound "' + await kernel.translateBlock('${lang.ge_com_tabinfo_' + toi + '}') + '" "' + props.info[toi] + '"}'),
+                    }
+                    returns.tab = 'info'
+                    returns.item = toi
+
+                    return returns
+                }
+
+                const src = path.resolve(props.info[toi])
+                const dst = path.join(interalmediapath, toi + path.extname(src))
+                if (src != dst) {
+                    mkdirp.sync(interalmediapath)
+                    fs.copyFileSync(src, dst)
+                }
+                props.info[toi] = '@media://' + toi + path.extname(src)
             }
-            const src = path.resolve(props.info[toi])
-            const dst = path.join(interalmediapath, toi + path.extname(src))
-            if (src != dst) {
-                mkdirp.sync(interalmediapath)
-                fs.copyFileSync(src, dst)
-            }
-            props.info[toi] = '@media://' + toi + path.extname(src)
+        } catch (e) {
+            this.logError(`Error while saving game media: %s`, e.message)
+            throw e
         }
 
         return returns
@@ -183,6 +208,7 @@ class myplugin extends global.Plugin {
         if (action.split('.')[0] != 'import') {
             return
         }
+        //this.log(`Providing game info structure for action %o, Existing info:`, action, existinginfo)
         if (!newargsinfo) {
             newargsinfo = {}
         }
@@ -250,16 +276,13 @@ class myplugin extends global.Plugin {
             }
         }
         const yopts = {}
+        //let yearSelected = false;
         for (let h = new Date().getFullYear() + 1; h >= 2000; h--) {
-            if (h == new Date().getFullYear()) {
-                yopts['' + h] = {
-                    title: '' + h
-                    , selected: true
-                }
-            } else {
-                yopts['' + h] = '' + h
-            }
+            yopts['' + h] = '' + h
         }
+        /*if (!yearSelected) {
+            yopts['' + new Date().getFullYear()].selected = true;
+        }*/
         newargsinfo.tabs.info.items.year.opts = yopts
         return newargsinfo;
     }

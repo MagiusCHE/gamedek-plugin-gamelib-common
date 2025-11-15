@@ -278,11 +278,16 @@ class myplugin extends global.Plugin {
         const yopts = {}
         //let yearSelected = false;
         for (let h = new Date().getFullYear() + 1; h >= 2000; h--) {
-            yopts['' + h] = '' + h
+            if (h == new Date().getFullYear()) {
+                yopts['' + h] = {
+                    title: '' + h
+                    , preferred: true
+                }
+            } else {
+                yopts['' + h] = '' + h
+            }
         }
-        /*if (!yearSelected) {
-            yopts['' + new Date().getFullYear()].selected = true;
-        }*/
+
         newargsinfo.tabs.info.items.year.opts = yopts
         return newargsinfo;
     }

@@ -277,7 +277,7 @@ class myplugin extends global.Plugin {
         }
         const yopts = {}
         //let yearSelected = false;
-        for (let h = new Date().getFullYear() + 1; h >= 2000; h--) {
+        for (let h = new Date().getFullYear() + 1; h >= 1997; h--) {
             if (h == new Date().getFullYear()) {
                 yopts['' + h] = {
                     title: '' + h
